@@ -13,26 +13,45 @@
       <option value="mp3">MP3 (Audio)</option>
       <option value="mp4">MP4 (Video)</option>
     </select>
-    <button onclick="download()">Download</button>
-    <div id="result"></div>
+    <button onclick="download()">Proses</button>
+
+    <div id="preview" class="media-preview"></div>
+    <div id="result" class="download-button" style="display: none;"></div>
   </div>
+
   <script>
     async function download() {
       const url = document.getElementById('url').value;
       const type = document.getElementById('type').value;
+      const previewDiv = document.getElementById('preview');
       const resDiv = document.getElementById('result');
-      resDiv.innerHTML = '⏳ Memproses...';
+
+      previewDiv.innerHTML = '⏳ Memproses...';
+      resDiv.style.display = 'none';
+
       try {
         const res = await fetch(`/api/youtube?url=${encodeURIComponent(url)}&type=${type}`);
         const data = await res.json();
+
         if (data.status) {
           const link = data.result.url || data.result.audio || data.result.video || '#';
-          resDiv.innerHTML = `✅ <a href="${link}" target="_blank">Download ${type.toUpperCase()}</a>`;
+          const thumb = data.result.thumbnail || '';
+
+          // Tampilkan gambar/preview video
+          if (thumb) {
+            previewDiv.innerHTML = `<img src="${thumb}" alt="Thumbnail" class="thumbnail">`;
+          } else {
+            previewDiv.innerHTML = `<video controls width="100%" src="${link}"></video>`;
+          }
+
+          // Tampilkan tombol download
+          resDiv.innerHTML = `<a class="download-btn" href="${link}" target="_blank">⬇️ Download ${type.toUpperCase()}</a>`;
+          resDiv.style.display = 'block';
         } else {
-          resDiv.innerHTML = '❌ Gagal: ' + (data.message || data.error);
+          previewDiv.innerHTML = '❌ Gagal: ' + (data.message || data.error);
         }
       } catch (e) {
-        resDiv.innerHTML = '⚠️ Error: ' + e.message;
+        previewDiv.innerHTML = '⚠️ Error: ' + e.message;
       }
     }
   </script>
